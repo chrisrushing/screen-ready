@@ -1,0 +1,25 @@
+{
+  "name": "screen-ready",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plugin for Figma design that exports frames as tagged, PDF/UA-1 PDFs screen readers can follow.",
+  "license": "MIT",
+  "author": "Chris Rushing",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node tools/stress-test.ts && node tools/edge-cases-test.ts && node tools/contrast-test.ts && node tools/slim-test.ts"
+  },
+  "dependencies": {
+    "pdf-lib": "1.17.1"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "1.109.0",
+    "@types/node": "^22.20.5",
+    "esbuild": "0.25.0",
+    "jpeg-js": "^0.4.4",
+    "typescript": "5.7.3"
+  }
+}

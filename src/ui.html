@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: var(--figma-color-bg, #fff);
+    --bg-2: var(--figma-color-bg-secondary, #f5f5f5);
+    --bg-hover: var(--figma-color-bg-hover, #f0f0f0);
+    --bg-selected: var(--figma-color-bg-selected, #e5f4ff);
+    --text: var(--figma-color-text, #1e1e1e);
+    --text-2: var(--figma-color-text-secondary, #666);
+    --text-3: var(--figma-color-text-tertiary, #999);
+    --border: var(--figma-color-border, #e6e6e6);
+    --brand: var(--figma-color-bg-brand, #0d99ff);
+    --brand-hover: var(--figma-color-bg-brand-hover, #007be5);
+    --on-brand: var(--figma-color-text-onbrand, #fff);
+    --focus: var(--figma-color-border-selected, #0d99ff);
+    --danger: var(--figma-color-text-danger, #dc3412);
+    --danger-bg: var(--figma-color-bg-danger-tertiary, #ffe2e0);
+    --warn: var(--figma-color-text-warning, #b86200);
+    --warn-bg: var(--figma-color-bg-warning-tertiary, #fff1c2);
+    --warn-solid: var(--figma-color-bg-warning, #ffcd29);
+    --warn-solid-hover: var(--figma-color-bg-warning-hover, #ffc21a);
+    --on-warn: var(--figma-color-text-onwarning, #000);
+    --ok: var(--figma-color-text-success, #14ae5c);
+    --ok-bg: var(--figma-color-bg-success-tertiary, #dcf7e6);
+    --r: 6px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; display: flex; flex-direction: column;
+    font: 11px/16px Inter, system-ui, -apple-system, sans-serif;
+    color: var(--text); background: var(--bg);
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: -1px; border-radius: 4px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .link { background: none; border: 0; padding: 0; color: var(--brand); cursor: pointer; white-space: nowrap; }
+  .link:hover { text-decoration: underline; }
+  [hidden] { display: none !important; }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .tab {
+    flex: 1 1 0; text-align: center;
+    border: 0; background: none; padding: 4px 10px; border-radius: var(--r); cursor: pointer;
+    font-weight: 500; color: var(--text-2);
+  }
+  .tab-count { margin-left: 6px; padding: 0 6px; border-radius: 9px; background: var(--brand); color: var(--on-brand); font-size: 10px; font-weight: 600; line-height: 16px; display: inline-block; min-width: 16px; }
+  .tab-count:empty { display: none; }
+  .tab-count.done { background: none; color: var(--ok); padding: 0; min-width: 0; display: inline-flex; vertical-align: -2px; }
+  .tab:hover { background: var(--bg-hover); color: var(--text); }
+  .tab[aria-selected="true"] { background: var(--bg-2); color: var(--text); font-weight: 600; }
+  .panel { flex: 1; overflow-y: auto; min-height: 0; }
+
+  /* ---------- content: scope + status ---------- */
+  .scope { display: flex; justify-content: space-between; gap: 8px; padding: 10px 16px 0; color: var(--text-2); }
+  .status { margin: 8px 12px 0; border-radius: var(--r); padding: 10px 12px; display: grid; gap: 2px; }
+  .status.ok { background: var(--ok-bg); }
+  .status.issues { background: var(--warn-bg); }
+  .status.errors { background: var(--danger-bg); }
+  .status-title { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .status.ok .status-title { color: var(--ok); }
+  .status.issues .status-title { color: var(--warn); }
+  .status.errors .status-title { color: var(--danger); }
+  .status-meta { color: var(--text-2); }
+  .status ul { list-style: none; margin: 6px -6px 0; padding: 0; display: grid; gap: 1px; }
+  .status li button {
+    all: unset; box-sizing: border-box; display: flex; gap: 8px; width: 100%;
+    padding: 4px 6px; border-radius: 4px; cursor: pointer; color: var(--text);
+  }
+  .status li button:hover { background: rgba(127,127,127,.12); }
+  .status li button:focus-visible { outline: 2px solid var(--focus); }
+  .dot { flex: none; width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; }
+  .dot.error { background: var(--danger); }
+  .dot.warn { background: var(--warn); }
+  .legend { padding: 8px 16px 0; color: var(--text-3); display: flex; flex-wrap: wrap; gap: 0 10px; }
+  .legend[hidden], .toolbar[hidden] { display: none; }
+  .scope-actions { display: inline-flex; gap: 2px; margin: -5px -6px -5px 0; }
+  .toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 12px 0; min-height: 38px; }
+  /* To review / Everything */
+  .seg { display: inline-flex; gap: 2px; background: var(--bg-2); border-radius: 7px; padding: 2px; }
+  .seg-btn { height: 24px; display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; padding: 0 10px; border-radius: 5px; font: inherit; font-weight: 500; color: var(--text-2); cursor: pointer; white-space: nowrap; }
+  .seg-count { min-width: 16px; height: 16px; padding: 0 5px; border-radius: 8px; background: var(--bg-hover); color: var(--text-2); font-size: 10px; font-weight: 600; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums; }
+  .seg-count:empty { display: none; }
+  .seg-btn[aria-pressed="true"] .seg-count { background: var(--brand); color: var(--on-brand); }
+  .seg-btn:hover { color: var(--text); }
+  .seg-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .seg-btn[aria-pressed="true"] { background: var(--bg); color: var(--text); font-weight: 600; box-shadow: 0 0 0 1px var(--border); }
+  /* Status card: count, progress, summary */
+  .status-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .status-done { color: var(--text-2); white-space: nowrap; }
+  .progress { height: 4px; border-radius: 2px; background: rgba(127,127,127,.28); overflow: hidden; margin: 6px 0 4px; }
+  .progress-fill { height: 100%; background: var(--ok); border-radius: 2px; transition: width .2s ease-out; }
+  /* One-click fixes on a row */
+  .fixes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .fix-btn { height: 24px; padding: 0 10px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .fix-btn:hover { background: var(--bg-hover); }
+  .fix-btn.main { background: var(--brand); border-color: transparent; color: var(--on-brand); font-weight: 600; }
+  .fix-btn.main:hover { background: var(--brand-hover); }
+  .fix-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .item.fixed { background: var(--ok-bg); box-shadow: inset 3px 0 0 var(--ok); }
+  .fixed-note { margin-top: 4px; color: var(--ok); font-weight: 600; display: flex; width: fit-content; }
+  /* To review view: a short list; pages with nothing left are one quiet line */
+  ol.items.review .handle { visibility: hidden; }
+  ol.items.review .item { margin-top: 4px; }
+  .item.note { grid-template-columns: 16px minmax(0, 1fr); }
+  .review-view .frame .count { display: none; }
+  .done-frame { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 6px; width: 100%; padding: 2px 8px; border-radius: var(--r); color: var(--text-3); cursor: pointer; }
+  .done-frame.frame { margin-top: 2px; }
+  .done-frame:hover { background: var(--bg-hover); color: var(--text-2); }
+  .done-frame:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .done-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .done-mark { color: var(--ok); font-weight: 600; display: inline-flex; }
+  .badge.ok { background: transparent; color: var(--ok); font-weight: 700; font-size: 11px; }
+  .frame.here > summary { color: var(--text); box-shadow: inset 2px 0 0 var(--focus); }
+  .all-done { margin: 12px 8px 8px; padding: 14px 12px; border-radius: var(--r); background: var(--ok-bg); display: grid; gap: 2px; justify-items: start; }
+  .all-done strong { color: var(--ok); }
+  .all-done span { color: var(--text-2); }
+  .bulk { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  /* Icons (Lucide): small moves are icons, with a tooltip and a label for screen readers. */
+  .ic { flex: none; display: block; }
+  .with-icon { display: inline-flex; align-items: center; gap: 5px; }
+  .icon-btn:hover:not(:disabled) .ic, .tool-btn:hover .ic { color: var(--text); }
+  .icon-btn[aria-expanded="true"] { background: var(--bg-selected); color: var(--brand); }
+  .tool-group { margin-left: auto; display: inline-flex; align-items: center; gap: 2px; }
+  .tool-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+  .icon-btn { width: 28px; height: 28px; display: inline-grid; place-items: center; padding: 0; border-radius: 5px; border: 0; background: none; color: var(--text-2); cursor: pointer; }
+  .tool-btn { height: 28px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; border: 0; border-radius: 5px; background: none; font: inherit; font-weight: 500; color: var(--text-2); cursor: pointer; white-space: nowrap; }
+  .tool-btn:hover { background: var(--bg-hover); color: var(--text); }
+  .tool-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .tool-btn[aria-expanded="true"] { background: var(--bg-selected); color: var(--brand); }
+  .icon-btn:hover:not(:disabled) { background: var(--bg-hover); color: var(--text); }
+  .icon-btn:disabled { opacity: .35; cursor: default; }
+  .icon-btn:focus-visible { outline: 2px solid var(--focus); }
+  .toolbar .order-toggle { margin-left: 4px; }
+  /* Language on a text row: quiet until it matters */
+  .lang-select { grid-column: 3 / -1; justify-self: start; margin-top: 2px; height: 20px; max-width: 160px; border: 1px solid transparent; border-radius: 4px; background: none; color: var(--text-3); font: inherit; font-size: 11px; cursor: pointer; opacity: 0; }
+  .item:hover .lang-select, .item:focus-within .lang-select, .lang-select.set { opacity: 1; }
+  .lang-select.set { color: var(--focus); background: var(--bg-selected); }
+  .lang-select:focus-visible { outline: 2px solid var(--focus); opacity: 1; }
+  /* About: the full logo. The wordmark follows the theme's text color; the brand blue gets a lighter
+     tint in dark mode, where #002BFF on dark gray is under 2:1. */
+  .about { display: grid; gap: 8px; justify-items: start; }
+  .about p { margin: 0; color: var(--text-2); }
+  .about-title { margin: 0; line-height: 0; }
+  .about-logo { width: 180px; height: auto; margin: 2px 0 2px; }
+  .logo-blue { fill: #002BFF; }
+  .logo-ink { fill: var(--text); }
+  .figma-dark .logo-blue { fill: #7b93ff; }
+  .about-version { color: var(--text-3) !important; }
+  .about-credit .link { font: inherit; }
+  .nowrap { white-space: nowrap; }
+  .shortcuts { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 4px 0 0; color: var(--text-2); }
+  .shortcuts dt { color: var(--text); font-weight: 500; white-space: nowrap; }
+  .shortcuts dd { margin: 0; }
+  /* Preview */
+  .preview-hint { margin: 8px 16px 0; color: var(--text-3); }
+  #preview-body { padding: 4px 8px 16px; }
+  .preview-page { margin-top: 10px; }
+  .preview-page-name { all: unset; cursor: pointer; display: block; padding: 4px 8px; font-weight: 600; }
+  .preview-page-name:hover { text-decoration: underline; }
+  .preview-page-name:focus-visible, .preview-line:focus-visible { outline: 2px solid var(--focus); border-radius: 4px; }
+  ol.read-aloud, ol.outline { list-style: none; margin: 0; padding: 0; }
+  .preview-line { all: unset; box-sizing: border-box; display: flex; gap: 6px; width: 100%; padding: 3px 8px; border-radius: 4px; cursor: pointer; color: var(--text-2); }
+  .preview-line:hover { background: var(--bg-hover); color: var(--text); }
+  .said-kind { flex: none; color: var(--text-3); }
+  .line.heading .preview-text { color: var(--text); font-weight: 600; }
+  .line.row .preview-line, .line.entry .preview-line { padding-left: 20px; }
+  .preview-text { min-width: 0; overflow-wrap: anywhere; }
+  .lvl { flex: none; width: 22px; color: var(--focus); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .skip-flag { flex: none; margin-left: auto; color: var(--danger); font-weight: 500; }
+  .preview-empty { padding: 4px 8px; color: var(--text-3); }
+  /* Settings → Pages */
+  .pages-list { display: grid; gap: 1px; margin-top: 6px; }
+  .page-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 22px 22px; gap: 6px; align-items: center; padding: 2px 0; }
+  .page-row.left-out .page-name { color: var(--text-3); text-decoration: line-through; }
+  .page-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .page-move { width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text-2); cursor: pointer; padding: 0; }
+  .page-move:disabled { opacity: .3; cursor: default; }
+  .page-move:focus-visible { outline: 2px solid var(--focus); }
+  .report-link { margin-top: 4px; justify-self: start; }
+  .order-toggle { margin-left: auto; }
+  .contrast-bad.accepted { background: var(--bg-2); color: var(--text-3); font-weight: 500; }
+  /* A real button in Figma's warning style; once accepted, a quiet secondary button to undo. */
+  .contrast-toggle {
+    justify-self: start; margin-top: 8px; height: 28px; padding: 0 12px; border-radius: var(--r);
+    border: 1px solid transparent; background: var(--warn-solid); color: var(--on-warn);
+    font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .contrast-toggle:hover { background: var(--warn-solid-hover); }
+  .contrast-toggle:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .contrast-toggle.undo { background: var(--bg); color: var(--text); border-color: var(--border); font-weight: 500; }
+  .contrast-toggle.undo:hover { background: var(--bg-hover); }
+  .contrast-bad { display: inline-block; margin-right: 6px; padding: 0 5px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-weight: 600; }
+  .style-rules { display: grid; gap: 2px; margin-top: 6px; }
+  .style-rule { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; align-items: center; padding: 4px 0; }
+  .style-rule .role { width: 96px; }
+  .style-info { display: grid; min-width: 0; cursor: pointer; }
+  .style-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .style-sample { color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .order-toggle[aria-pressed="true"] { font-weight: 600; }
+  .legend .swatch { display: inline-block; width: 18px; height: 10px; border: 1px dashed var(--text-3); border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+
+  /* ---------- frames ---------- */
+  #frames { padding: 4px 8px 16px; }
+  .frame { margin-top: 8px; }
+  .frame > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    padding: 6px 8px; border-radius: var(--r); font-weight: 600;
+    position: sticky; top: 0; background: var(--bg); z-index: 2;
+  }
+  .frame > summary::-webkit-details-marker { display: none; }
+  .frame > summary .caret { color: var(--text-2); transition: transform .12s; }
+  .frame[open] > summary .caret { transform: rotate(90deg); }
+  @media (prefers-reduced-motion: reduce) { .frame > summary .caret { transition: none; } }
+  .frame > summary:hover { background: var(--bg-hover); }
+  .frame .count { color: var(--text-3); font-weight: 400; }
+  .badge { margin-left: auto; font-weight: 500; font-size: 10px; padding: 0 6px; border-radius: 8px; line-height: 16px; }
+  .badge.error { background: var(--danger-bg); color: var(--danger); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .order-note { color: var(--text-3); padding: 0 8px 4px 22px; }
+
+  ol.items { list-style: none; margin: 0; padding: 0; position: relative; }
+  .item {
+    display: grid; grid-template-columns: 16px 60px minmax(0, 1fr) auto; column-gap: 8px; align-items: start;
+    padding: 6px 8px; border-radius: var(--r); position: relative;
+  }
+  .item:hover, .item:focus-within { background: var(--bg-hover); }
+  .item.jumps { cursor: pointer; }
+  .item.jumps textarea, .item.jumps select { cursor: auto; }
+  .item.dragging { opacity: .4; }
+  .item.flash { animation: flash 1.2s ease-out; }
+  @keyframes flash { 0%, 30% { background: var(--bg-selected); } 100% { background: transparent; } }
+  .item.in-group::before { content: ''; position: absolute; left: 1px; top: 0; bottom: 0; width: 2px; background: var(--text-3); opacity: .45; }
+  .item.in-group.group-first::before { top: 10px; border-radius: 2px 2px 0 0; }
+  .item.in-group.group-last::before { bottom: 10px; border-radius: 0 0 2px 2px; }
+  .item.group-first:not(:first-child) { margin-top: 6px; }
+
+  .handle {
+    all: unset; width: 16px; height: 24px; display: grid; place-items: center;
+    color: var(--text-3); cursor: grab; border-radius: 4px; touch-action: none; opacity: 0;
+  }
+  .item:hover .handle, .item:focus-within .handle, .handle:focus-visible { opacity: 1; }
+  .handle:focus-visible { outline: 2px solid var(--focus); }
+  .handle:active { cursor: grabbing; }
+
+  .role {
+    width: 60px; height: 24px; padding: 0 4px 0 8px; border-radius: 5px; cursor: pointer;
+    background: var(--bg-2); border: 1px solid transparent; font-weight: 500;
+  }
+  .role:hover { border-color: var(--border); }
+  .role.suggested { border: 1px dashed var(--text-3); }
+  .item.heading .role { background: var(--bg-selected); color: var(--focus); }
+
+  .text-cell { min-width: 0; }
+  .text {
+    all: unset; cursor: pointer; padding-top: 4px; min-width: 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    overflow-wrap: anywhere; color: var(--text-2);
+  }
+  .text:hover { color: var(--text); text-decoration: underline; text-decoration-color: var(--text-3); }
+  .text:focus-visible { outline: 2px solid var(--focus); }
+  .item.heading .text { color: var(--text); font-weight: 600; }
+  .size { padding-top: 4px; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .skip-hint { display: none; color: var(--text-3); }
+  .item.skipped .text, .item.skipped .size { opacity: .45; }
+  .item.skipped .skip-hint { display: block; }
+  .item.skipped .role { color: var(--text-3); }
+  .item.pattern { grid-template-columns: 16px 60px minmax(0, 1fr) auto; align-items: center; }
+  .pattern-badge { width: 60px; height: 24px; display: grid; place-items: center; border-radius: 5px; background: var(--bg-2); color: var(--text-3); font-weight: 500; }
+  .pattern-title { color: var(--text-2); }
+  .pattern-hint { display: block; }
+  .structure-badge { background: var(--bg-selected); color: var(--focus); }
+  .structure-actions { display: flex; gap: 10px; }
+  .link.muted { color: var(--text-3); }
+  .item.in-structure { margin-left: 16px; }
+
+  .item.image { grid-template-columns: 16px 40px minmax(0, 1fr); row-gap: 8px; }
+  /* Exactly what needs attention: the row itself is tinted and says why. */
+  .item.attention { background: var(--warn-bg); box-shadow: inset 3px 0 0 var(--warn-solid); }
+  .item.attention.error { background: var(--danger-bg); box-shadow: inset 3px 0 0 var(--danger); }
+  .item.attention.current { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .attention-note { margin-top: 4px; color: var(--warn); font-weight: 500; line-height: 15px; }
+  /* Alt text typed in: approved on the spot, green while you keep typing. */
+  .item.attention.typed { background: var(--ok-bg); box-shadow: inset 3px 0 0 var(--ok); }
+  .item.typed .attention-note, .item.typed .fixes { display: none; }
+  .item:not(.typed) .typed-note { display: none; }
+  .item.attention.error .attention-note { color: var(--danger); }
+  /* Done: one quiet line with what a screen reader will say, and Edit. */
+  .item.image.settled { grid-template-columns: 16px 40px minmax(0, 1fr) auto; align-items: center; }
+  .item.image.settled .thumb { width: 28px; height: 28px; justify-self: center; }
+  .item.image.settled .image-state { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; background: var(--bg-2); display: block; }
+  .image-head { min-width: 0; padding-top: 2px; }
+  .image-head .text { padding-top: 0; color: var(--text); font-weight: 500; -webkit-line-clamp: 1; }
+  .image-state { color: var(--text-3); }
+  .image-state.needs { color: var(--warn); }
+  .image-body { grid-column: 2 / -1; display: grid; gap: 6px; }
+  .alt {
+    width: 100%; min-height: 52px; resize: vertical; padding: 6px 8px; line-height: 16px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+  }
+  .alt:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+  .alt:disabled { opacity: .45; }
+  .check { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); cursor: pointer; width: fit-content; padding: 2px 6px 2px 2px; border: 1px solid transparent; border-radius: 4px; }
+  .check.suggested { border: 1px dashed var(--text-3); }
+  .alt.suggested { border-style: dashed; }
+  .suggest-why { color: var(--text-3); }
+  .drop-marker { position: absolute; left: 8px; right: 8px; height: 2px; background: var(--focus); border-radius: 1px; pointer-events: none; z-index: 3; }
+  .empty { color: var(--text-2); padding: 40px 24px; text-align: center; display: grid; gap: 10px; justify-items: center; }
+  .empty strong { color: var(--text); font-size: 12px; }
+
+  /* ---------- settings ---------- */
+  .settings { padding: 4px 16px 16px; display: grid; gap: 20px; }
+  .review-options { margin: 0 16px 12px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r); display: grid; gap: 16px; }
+  .review-options[hidden] { display: none; }
+  .review-options h2 { margin-top: 0; }
+  .review-options .order-toggle { margin-left: 0; justify-self: start; }
+  .review-options .group { display: grid; gap: 6px; justify-items: start; }
+  .review-options .group > .hint { display: block; }
+  .export-status .fix-btn { justify-self: start; }
+  .export-status { padding: 10px 12px; border-radius: var(--r); background: var(--bg-2); display: grid; gap: 6px; margin-top: 12px; }
+  .export-status:empty { display: none; }
+  .export-status .ready { color: var(--ok); font-weight: 600; display: flex; }
+  .fold .ic { transition: transform .12s; }
+  .fold[aria-expanded="true"] .ic { transform: rotate(180deg); }
+  .badge.ok { display: inline-flex; padding: 0 2px; }
+  .review-pos .pos-done { display: inline-block; vertical-align: -2px; margin-right: 4px; color: var(--ok); }
+  .edit-image { width: 24px; height: 24px; }
+  .export-status .open { font-weight: 600; }
+  .export-status p { margin: 0; color: var(--text-2); }
+  #result { margin-top: -8px; }
+  .group h2 { font-size: 11px; font-weight: 600; margin: 12px 0 8px; }
+  .field { display: grid; gap: 4px; margin-bottom: 10px; }
+  .field label { color: var(--text-2); }
+  .hint { color: var(--text-3); }
+  .input, select.input {
+    width: 100%; min-width: 0; height: 28px; padding: 0 8px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+  }
+  .input:hover { border-color: var(--text-3); }
+  .input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus); }
+  .choices { display: grid; gap: 6px; border: 0; margin: 0; padding: 0; }
+  .choice {
+    display: grid; grid-template-columns: 16px 1fr; gap: 2px 8px; align-items: start; cursor: pointer;
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--r);
+  }
+  .choice:hover { border-color: var(--text-3); }
+  .choice:has(input:checked) { border-color: var(--focus); background: var(--bg-selected); }
+  .choice input { margin: 1px 0 0; accent-color: var(--brand); }
+  .choice strong { font-weight: 600; }
+  .choice span { grid-column: 2; color: var(--text-2); }
+
+  /* ---------- progress ---------- */
+  /* Start screen: before anything is read. Everything else waits behind it. */
+  .start { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  body[data-stage="boot"] > * { visibility: hidden; }
+  body[data-stage="start"] .start { display: flex; }
+  body[data-stage="start"] > .tabs, body[data-stage="start"] > .loadbar, body[data-stage="start"] > .panel, body[data-stage="start"] > footer { display: none !important; }
+  .start-body { flex: 1; overflow-y: auto; padding: 20px 16px 8px; display: grid; align-content: start; gap: 12px; }
+  .start-head { display: flex; align-items: center; gap: 10px; }
+  .start-icon { flex: none; border-radius: 7px; }
+  .start h1 { font-size: 15px; line-height: 20px; font-weight: 600; margin: 0; }
+  .start p { margin: 0; }
+  .start-lede { color: var(--text-2); }
+  .start-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .start-list li { position: relative; padding-left: 22px; color: var(--text-2); }
+  .start-list li b { color: var(--text); font-weight: 600; }
+  .start-list li::before { content: ""; position: absolute; left: 0; top: 1px; width: 14px; height: 14px; border-radius: 50%; background: var(--ok-bg); }
+  .start-list li::after { content: ""; position: absolute; left: 4px; top: 4px; width: 5px; height: 3px; border: solid var(--ok); border-width: 0 0 1.5px 1.5px; transform: rotate(-45deg); }
+  .start-next { color: var(--text-2); }
+  .start-foot { padding: 12px 16px; border-top: 1px solid var(--border); display: grid; gap: 8px; }
+  .start-scope { color: var(--text-2); }
+  .start-scope b { color: var(--text); font-weight: 600; }
+  .start-auto { width: auto; }
+  .about-settings { display: grid; gap: 6px; justify-items: start; }
+  .about-tips h2 { margin: 0 0 8px; }
+  .tips { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; color: var(--text-2); }
+  .tips li { display: flex; gap: 8px; align-items: flex-start; }
+  .tips .tip-ic { color: var(--ok); margin-top: 2px; }
+  .tips b { color: var(--text); font-weight: 600; }
+  .about-settings h2 { margin: 0 0 2px; }
+  .loadbar { height: 2px; position: relative; overflow: hidden; background: transparent; flex: none; }
+  .loadbar-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--brand); transition: width .25s ease; }
+  .loadbar.indeterminate .loadbar-fill { width: 30%; animation: slide 1.1s ease-in-out infinite; }
+  @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+  .loading { display: grid; justify-items: center; gap: 8px; padding: 56px 24px; color: var(--text-2); text-align: center; }
+  .loading strong { color: var(--text); font-size: 12px; font-weight: 600; }
+  .spinner {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--border); border-top-color: var(--brand); animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #frames.dimmed { opacity: .5; pointer-events: none; transition: opacity .2s; }
+  @media (prefers-reduced-motion: reduce) {
+    .loadbar.indeterminate .loadbar-fill { animation: none; width: 100%; opacity: .35; }
+    .spinner { animation: none; border-top-color: var(--border); }
+    .loadbar-fill, .primary .fill { transition: none; }
+  }
+
+  /* ---------- footer ---------- */
+  footer { padding: 12px 16px; border-top: 1px solid var(--border); display: grid; gap: 8px; }
+  /* Reviewing sits above exporting, split by a rule, so Next is never mistaken for Export. */
+  .review-nav { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding-bottom: 10px; margin-bottom: 2px; border-bottom: 1px solid var(--border); }
+  .review-nav[hidden] { display: none; }
+  /* The footer follows the tab: Review steps through issues, Export exports, the rest have none. */
+  body[data-tab="preview"] footer, body[data-tab="about"] footer { display: none; }
+  body[data-tab="content"] #export, body[data-tab="content"] .export-meta { display: none; }
+  body[data-tab="content"] .review-nav { padding-bottom: 0; margin-bottom: 0; border-bottom: 0; }
+  body[data-tab="export"] .review-nav, body[data-tab="export"] .to-export { display: none; }
+  .to-export[hidden] { display: none; }
+  .nav-btn { height: 28px; display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; border-radius: var(--r); border: 1px solid var(--border); background: var(--bg); color: var(--text); font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .nav-btn:hover:not(:disabled) { background: var(--bg-hover); }
+  .nav-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .nav-btn:disabled { opacity: .4; cursor: default; }
+  /* Two lines, so the thing to fix is readable, not cut off after the frame name. */
+  .review-pos { min-width: 0; color: var(--text-2); text-align: center; line-height: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .primary {
+    width: 100%; height: 32px; border: 0; border-radius: var(--r); cursor: pointer; font-weight: 600;
+    background: var(--brand); color: var(--on-brand); position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .primary .label, .primary .ic { position: relative; }
+  /* While working, the track is a darker brand and the fill the normal brand, so the white label
+     keeps at least the idle button's contrast everywhere along the bar. */
+  .primary .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--brand); transition: width .25s ease; }
+  .primary.working, .primary.working:hover { background: color-mix(in srgb, var(--brand) 55%, #000); cursor: progress; opacity: 1; }
+  .primary:hover { background: var(--brand-hover); }
+  .primary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .primary[disabled]:not(.working) { opacity: .6; cursor: default; }
+  .export-meta { color: var(--text-3); text-align: center; }
+  #result:empty { display: none; }
+  #result { display: grid; gap: 2px; }
+  #result .ok { color: var(--ok); font-weight: 500; }
+  #result .warn { color: var(--warn); }
+  #result .err { color: var(--danger); }
+  #result .meta { color: var(--text-2); }
+</style>
+</head>
+<body data-stage="boot">
+  <section class="start" id="start" aria-labelledby="start-title">
+    <div class="start-body">
+      <div class="start-head">
+        <svg class="start-icon" viewBox="0 0 800 800" width="32" height="32" aria-hidden="true"><rect width="800" height="800" rx="120" fill="#002BFF"/><path d="M311.55 316.827C309.879 301.189 302.836 289.013 290.42 280.298C278.125 271.584 262.128 267.226 242.431 267.226C228.583 267.226 216.705 269.315 206.797 273.494C196.889 277.672 189.308 283.342 184.056 290.505C178.803 297.667 176.117 305.845 175.998 315.037C175.998 322.677 177.729 329.302 181.191 334.913C184.772 340.524 189.607 345.299 195.695 349.238C201.783 353.058 208.528 356.281 215.929 358.908C223.331 361.534 230.792 363.742 238.313 365.533L272.693 374.128C286.541 377.351 299.851 381.709 312.624 387.2C325.517 392.691 337.037 399.615 347.184 407.971C357.45 416.328 365.568 426.415 371.537 438.233C377.506 450.052 380.49 463.899 380.49 479.776C380.49 501.264 374.999 520.185 364.016 536.54C353.033 552.775 337.156 565.489 316.385 574.681C295.733 583.753 270.723 588.29 241.357 588.29C212.826 588.29 188.055 583.873 167.045 575.039C146.154 566.205 129.799 553.312 117.981 536.361C106.282 519.41 99.955 498.757 99 474.405H164.359C165.314 487.178 169.253 497.802 176.177 506.278C183.101 514.754 192.114 521.081 203.216 525.259C214.437 529.437 226.972 531.526 240.819 531.526C255.264 531.526 267.918 529.377 278.781 525.08C289.764 520.663 298.359 514.575 304.567 506.815C310.774 498.936 313.938 489.744 314.057 479.239C313.938 469.689 311.132 461.81 305.641 455.603C300.15 449.276 292.45 444.023 282.542 439.845C272.753 435.547 261.293 431.727 248.161 428.385L206.439 417.641C176.237 409.881 152.361 398.123 134.813 382.365C117.384 366.488 108.67 345.418 108.67 319.155C108.67 297.548 114.519 278.627 126.218 262.392C138.036 246.156 154.092 233.562 174.386 224.609C194.68 215.536 217.66 211 243.326 211C269.35 211 292.151 215.536 311.729 224.609C331.426 233.562 346.886 246.037 358.107 262.033C369.328 277.911 375.118 296.175 375.476 316.827H311.55Z" fill="white"/><path d="M425 588V262.277H476.714V211H648.705V262.277H701V435.335H648.705V486.612H623.72V515.747H674.853V588H606.869V537.889H553.994V486.612H493.564V588H425ZM493.564 413.776H631.855V283.836H493.564V413.776Z" fill="white"/></svg>
+        <h1 id="start-title">Get your page ready</h1>
+      </div>
+      <p class="start-lede">Screen Ready turns the frames on this page into one PDF a screen reader can follow, one frame per page.</p>
+      <ul class="start-list">
+        <li><b>Only what you're exporting.</b> Move drafts, notes and old versions to another page, or hide them. Every visible frame is a page.</li>
+        <li><b>In reading order.</b> Pages go left to right, then top to bottom. You can reorder them later.</li>
+        <li><b>Or select a few.</b> Select just the frames you want before you start.</li>
+      </ul>
+      <p class="start-next">Then: <b>Review</b> what needs a look, hear it in <b>Preview</b>, and <b>Export</b>.</p>
+    </div>
+    <div class="start-foot">
+      <p class="start-scope" id="start-scope" aria-live="polite"></p>
+      <button id="start-go" class="primary" type="button">Read this page</button>
+      <label class="check start-auto"><input type="checkbox" id="start-auto" /> Next time, skip this and read the page right away</label>
+    </div>
+  </section>
+  <nav class="tabs" role="tablist" aria-label="Plugin sections">
+    <button class="tab" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="true">Review<span class="tab-count" id="review-count" aria-hidden="true"></span></button>
+    <button class="tab" role="tab" id="tab-preview" aria-controls="panel-preview" aria-selected="false" tabindex="-1">Preview</button>
+    <button class="tab" role="tab" id="tab-export" aria-controls="panel-export" aria-selected="false" tabindex="-1">Export</button>
+    <button class="tab" role="tab" id="tab-about" aria-controls="panel-about" aria-selected="false" tabindex="-1">About</button>
+  </nav>
+  <div class="loadbar indeterminate" id="loadbar" role="progressbar" aria-label="Reading frames" aria-valuemin="0" aria-valuemax="100"><div class="loadbar-fill"></div></div>
+
+  <section class="panel" id="panel-content" role="tabpanel" aria-labelledby="tab-content">
+    <div class="scope"><span id="source"></span><span class="scope-actions"><button id="refresh" class="icon-btn" type="button" aria-label="Use selection" title="Use selection: work on the frames selected on the canvas (or the whole page, with nothing selected)"><span data-icon="square-mouse-pointer"></span></button><button id="reread" class="icon-btn" type="button" aria-label="Refresh" title="Refresh: read the frames again, after changes on the canvas"><span data-icon="rotate-cw"></span></button></span></div>
+    <div id="status"></div>
+    <div class="toolbar" id="legend">
+      <div class="seg" role="group" aria-label="What to show">
+        <button id="view-review" class="seg-btn" type="button" aria-pressed="true">To review<span class="seg-count" id="review-view-count"></span></button>
+        <button id="view-all" class="seg-btn" type="button" aria-pressed="false">Everything</button>
+      </div>
+      <div class="tool-group">
+        <button id="undo" class="icon-btn" type="button" disabled aria-label="Undo"><span data-icon="undo-2"></span></button>
+        <span class="tool-sep" aria-hidden="true"></span>
+        <button id="options-toggle" class="icon-btn" type="button" aria-expanded="false" aria-controls="review-options" aria-label="Options" title="Options: canvas order, contrast, text style rules"><span data-icon="sliders-horizontal"></span></button>
+      </div>
+    </div>
+    <div class="review-options" id="review-options" hidden>
+      <div class="group">
+        <h2>Canvas</h2>
+        <button id="show-order" class="link order-toggle with-icon" type="button" aria-pressed="false"><span data-icon="eye" data-size="14"></span>Show order on canvas</button>
+      </div>
+      <div class="group">
+        <h2>Contrast</h2>
+        <label class="check"><input type="checkbox" id="flag-contrast" checked /> Flag low-contrast text</label>
+        <span class="hint">Turn off to accept low contrast as a design choice. Screen readers and the PDF/UA check aren't affected, but it fails WCAG AA for readers with low vision. Everything else is still reviewed.</span>
+      </div>
+      <div class="group">
+        <h2>Text styles</h2>
+        <span class="hint">Set a role once per style — every layer in that style follows it, unless you set the layer by hand. Auto uses the suggestion.</span>
+        <div id="style-rules" class="style-rules"></div>
+      </div>
+    </div>
+    <div class="legend" id="hints" hidden>
+      <span><span class="swatch" aria-hidden="true"></span>suggested</span>
+      <span class="with-icon">drag <span data-icon="grip-vertical" data-size="12"></span> to reorder</span>
+      <button id="reset-suggestions" class="link with-icon" type="button" hidden><span data-icon="rotate-ccw" data-size="12"></span>Reset all to suggestions</button>
+    </div>
+    <div class="loading" id="loading">
+      <div class="spinner" aria-hidden="true"></div>
+      <strong>Reading your frames…</strong>
+      <span id="loading-detail">Looking at text, images and layout</span>
+    </div>
+    <div id="frames" aria-label="Frames and reading order"></div>
+  </section>
+
+  <section class="panel" id="panel-preview" role="tabpanel" aria-labelledby="tab-preview" hidden>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Preview">
+        <button id="preview-read" class="seg-btn" type="button" aria-pressed="true">Read aloud</button>
+        <button id="preview-outline" class="seg-btn" type="button" aria-pressed="false">Outline</button>
+      </div>
+    </div>
+    <p class="preview-hint">What a screen reader will say, in order, from what will be exported. Click a line to find it on the canvas.</p>
+    <div id="preview-body"></div>
+  </section>
+
+
+  <section class="panel" id="panel-export" role="tabpanel" aria-labelledby="tab-export" hidden>
+    <div class="settings">
+      <div class="export-status" id="export-status" role="status" aria-live="polite"></div>
+      <div id="result" role="status" aria-live="polite"></div>
+      <div class="group">
+        <h2>Document</h2>
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" class="input" type="text" autocomplete="off" />
+          <span class="hint">Shown in the reader's title bar. Leave empty to use the first H1.</span>
+        </div>
+        <div class="field">
+          <label for="language">Language</label>
+          <input id="language" class="input" type="text" list="langs" autocomplete="off" placeholder="en-US" />
+          <datalist id="langs">
+            <option value="en-US">English (US)</option><option value="en-GB">English (UK)</option>
+            <option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option>
+            <option value="it">Italian</option><option value="pt-BR">Portuguese (Brazil)</option>
+            <option value="nl">Dutch</option><option value="ja">Japanese</option><option value="zh-CN">Chinese (Simplified)</option>
+          </datalist>
+          <span class="hint">Tells screen readers which voice and pronunciation to use.</span>
+        </div>
+      </div>
+      <div class="group">
+        <h2>Pages</h2>
+        <span class="hint" id="pages-note"></span>
+        <div id="pages-list" class="pages-list"></div>
+      </div>
+      <div class="group">
+        <h2 id="quality-label">Image quality</h2>
+        <fieldset class="choices" id="quality" aria-labelledby="quality-label"></fieldset>
+      </div>
+      <div class="group">
+        <h2>Color</h2>
+        <div class="field">
+          <label for="color-profile">Color profile</label>
+          <select id="color-profile" class="input">
+            <option value="DOCUMENT">Same as the Figma file</option>
+            <option value="SRGB">sRGB</option>
+            <option value="DISPLAY_P3_V4">Display P3</option>
+          </select>
+          <span class="hint">sRGB is the safest choice for sharing and printing.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-about" role="tabpanel" aria-labelledby="tab-about" hidden>
+    <div class="settings">
+      <div class="group about">
+        <h2 class="about-title"><svg class="about-logo" viewBox="0 0 2541 377" role="img" aria-label="Screen Ready"><path d="M1094.11 167.159V295H1042.69V76.8179H1091.84V113.892H1094.4C1099.42 101.676 1107.42 91.9695 1118.4 84.7725C1129.48 77.5755 1143.17 73.9771 1159.45 73.9771C1174.51 73.9771 1187.63 77.1967 1198.8 83.6361C1210.07 90.0755 1218.78 99.4032 1224.94 111.619C1231.19 123.835 1234.26 138.655 1234.17 156.079V295H1182.75V164.034C1182.75 149.451 1178.96 138.04 1171.39 129.801C1163.9 121.562 1153.53 117.443 1140.28 117.443C1131.28 117.443 1123.28 119.432 1116.27 123.409C1109.36 127.291 1103.91 132.926 1099.94 140.312C1096.05 147.699 1094.11 156.647 1094.11 167.159Z" class="logo-ink"/><path d="M918.173 299.261C896.298 299.261 877.406 294.716 861.497 285.625C845.683 276.439 833.514 263.466 824.992 246.704C816.469 229.848 812.208 210.009 812.208 187.187C812.208 164.744 816.469 145.047 824.992 128.096C833.609 111.051 845.636 97.7933 861.071 88.3236C876.507 78.7592 894.641 73.9771 915.475 73.9771C928.922 73.9771 941.611 76.1551 953.543 80.5111C965.569 84.7725 976.175 91.4013 985.361 100.398C994.641 109.394 1001.93 120.852 1007.24 134.773C1012.54 148.598 1015.19 165.076 1015.19 184.204V199.971H836.355V165.312H965.901C965.806 155.464 963.675 146.704 959.509 139.034C955.342 131.269 949.518 125.161 942.037 120.71C934.651 116.259 926.033 114.034 916.185 114.034C905.673 114.034 896.44 116.591 888.486 121.704C880.531 126.723 874.329 133.352 869.878 141.591C865.522 149.735 863.297 158.683 863.202 168.437V198.693C863.202 211.382 865.522 222.273 870.162 231.363C874.802 240.36 881.289 247.272 889.622 252.102C897.956 256.837 907.709 259.204 918.884 259.204C926.365 259.204 933.136 258.163 939.196 256.079C945.257 253.901 950.512 250.729 954.963 246.562C959.414 242.396 962.776 237.235 965.048 231.079L1013.06 236.477C1010.03 249.166 1004.25 260.246 995.73 269.716C987.302 279.091 976.507 286.382 963.344 291.591C950.181 296.704 935.124 299.261 918.173 299.261Z" class="logo-ink"/><path d="M697.064 299.261C675.189 299.261 656.297 294.716 640.388 285.625C624.573 276.439 612.405 263.466 603.882 246.704C595.359 229.848 591.098 210.009 591.098 187.187C591.098 164.744 595.359 145.047 603.882 128.096C612.5 111.051 624.526 97.7933 639.962 88.3236C655.397 78.7592 673.532 73.9771 694.365 73.9771C707.812 73.9771 720.502 76.1551 732.433 80.5111C744.46 84.7725 755.066 91.4013 764.252 100.398C773.532 109.394 780.823 120.852 786.127 134.773C791.43 148.598 794.081 165.076 794.081 184.204V199.971H615.246V165.312H744.791C744.697 155.464 742.566 146.704 738.399 139.034C734.233 131.269 728.409 125.161 720.928 120.71C713.541 116.259 704.924 114.034 695.075 114.034C684.564 114.034 675.331 116.591 667.377 121.704C659.422 126.723 653.219 133.352 648.769 141.591C644.413 149.735 642.187 158.683 642.092 168.437V198.693C642.092 211.382 644.413 222.273 649.053 231.363C653.693 240.36 660.18 247.272 668.513 252.102C676.846 256.837 686.6 259.204 697.774 259.204C705.255 259.204 712.026 258.163 718.087 256.079C724.147 253.901 729.403 250.729 733.854 246.562C738.305 242.396 741.666 237.235 743.939 231.079L791.95 236.477C788.92 249.166 783.144 260.246 774.621 269.716C766.193 279.091 755.397 286.382 742.234 291.591C729.072 296.704 714.015 299.261 697.064 299.261Z" class="logo-ink"/><path d="M466.864 295V76.8184H516.722V113.182H518.994C522.972 100.587 529.79 90.8809 539.449 84.0627C549.203 77.1498 560.33 73.6934 572.83 73.6934C575.671 73.6934 578.843 73.8354 582.347 74.1195C585.945 74.3089 588.928 74.6403 591.296 75.1138V122.415C589.118 121.657 585.661 120.994 580.926 120.426C576.286 119.763 571.788 119.432 567.432 119.432C558.057 119.432 549.629 121.468 542.148 125.54C534.761 129.517 528.938 135.057 524.676 142.159C520.415 149.262 518.284 157.453 518.284 166.733V295H466.864Z" class="logo-ink"/><path d="M347.175 299.261C325.395 299.261 306.692 294.479 291.067 284.915C275.537 275.35 263.557 262.14 255.129 245.284C246.796 228.333 242.629 208.826 242.629 186.761C242.629 164.602 246.891 145.047 255.414 128.096C263.936 111.051 275.963 97.7933 291.493 88.3236C307.118 78.7592 325.584 73.9771 346.891 73.9771C364.599 73.9771 380.271 77.2441 393.908 83.7782C407.639 90.2176 418.576 99.3558 426.72 111.193C434.864 122.935 439.504 136.666 440.641 152.386H391.493C389.504 141.875 384.77 133.115 377.289 126.108C369.902 119.005 360.006 115.454 347.601 115.454C337.09 115.454 327.857 118.295 319.902 123.977C311.948 129.564 305.745 137.613 301.294 148.125C296.938 158.636 294.76 171.231 294.76 185.909C294.76 200.776 296.938 213.56 301.294 224.261C305.65 234.867 311.758 243.058 319.618 248.835C327.573 254.517 336.9 257.358 347.601 257.358C355.177 257.358 361.948 255.937 367.914 253.096C373.974 250.161 379.04 245.947 383.112 240.454C387.184 234.962 389.978 228.286 391.493 220.426H440.641C439.41 235.861 434.864 249.545 427.004 261.477C419.145 273.314 408.444 282.594 394.902 289.318C381.36 295.947 365.451 299.261 347.175 299.261Z" class="logo-ink"/><path d="M168.608 84.0626C167.282 71.6573 161.695 61.9982 151.847 55.0854C142.093 48.1725 129.403 44.716 113.778 44.716C102.794 44.716 93.3712 46.3732 85.5114 49.6876C77.6515 53.002 71.6383 57.5001 67.4716 63.1819C63.3049 68.8638 61.1742 75.3505 61.0796 82.6422C61.0796 88.7028 62.4527 93.9585 65.1989 98.4092C68.0398 102.86 71.875 106.648 76.7046 109.773C81.5341 112.803 86.8845 115.36 92.7557 117.443C98.6269 119.527 104.545 121.279 110.511 122.699L137.784 129.517C148.769 132.074 159.328 135.53 169.46 139.886C179.687 144.243 188.826 149.735 196.875 156.364C205.019 162.993 211.458 170.994 216.193 180.369C220.928 189.744 223.295 200.729 223.295 213.324C223.295 230.369 218.939 245.379 210.227 258.352C201.515 271.231 188.92 281.316 172.443 288.608C156.061 295.805 136.222 299.404 112.926 299.404C90.2936 299.404 70.6439 295.9 53.9773 288.892C37.4053 281.885 24.4318 271.657 15.0568 258.21C5.77652 244.763 0.757576 228.381 0 209.063H51.8466C52.6042 219.195 55.7292 227.623 61.2216 234.347C66.714 241.07 73.8636 246.089 82.6705 249.404C91.572 252.718 101.515 254.375 112.5 254.375C123.958 254.375 133.996 252.671 142.614 249.261C151.326 245.758 158.144 240.928 163.068 234.773C167.992 228.523 170.502 221.231 170.597 212.898C170.502 205.322 168.277 199.072 163.92 194.148C159.564 189.129 153.456 184.962 145.597 181.648C137.831 178.239 128.741 175.208 118.324 172.557L85.2273 164.034C61.269 157.879 42.3295 148.551 28.4091 136.051C14.5833 123.457 7.67046 106.743 7.67046 85.9092C7.67046 68.7691 12.3106 53.7596 21.5909 40.8808C30.9659 28.002 43.7027 18.0115 59.8011 10.9092C75.8996 3.71224 94.1288 0.11377 114.489 0.11377C135.133 0.11377 153.22 3.71224 168.75 10.9092C184.375 18.0115 196.638 27.9073 205.54 40.5967C214.441 53.1914 219.034 67.6801 219.318 84.0626H168.608Z" class="logo-ink"/><path d="M2363.55 376.152V336.34H2322.82V279.597H2376.82V319.409H2486.18V256.717H2363.55V216.447H2322.82V80.0811H2376.82V199.516H2486.18V80.0811H2540.18V336.34H2499.45V376.152H2363.55Z" class="logo-blue"/><path d="M2103.55 296.071V256.717H2062.82V119.893H2103.55V80.081H2226.18V0H2280.64V256.717H2239V296.071H2103.55ZM2116.82 239.328H2225.73V136.824H2116.82V239.328Z" class="logo-blue"/><path d="M1832.48 296.071V256.717H1791.75V119.893H1832.48V80.0811H1967.93V119.893H2009.57V239.328H2050.3V296.071H1995.85V256.717H1967.93V296.071H1832.48ZM1845.75 239.328H1954.66V136.824H1845.75V239.328Z" class="logo-blue"/><path d="M1573.01 296.071V256.717H1532.29V119.893H1573.01V80.0811H1708.46V119.893H1749.65V176.178H1695.19V136.824H1586.28V159.247H1668.2V216.447H1586.28V239.328H1695.19V199.059H1749.65V256.259H1708.46V296.071H1573.01Z" class="logo-blue"/><path d="M1276.82 296.071V40.2693H1317.55V0H1453V40.2693H1494.18V176.178H1453V216.447H1433.32V239.328H1473.59V296.071H1420.05V256.717H1378.41V216.447H1330.82V296.071H1276.82ZM1330.82 159.247H1439.73V57.2007H1330.82V159.247Z" class="logo-blue"/></svg></h2>
+        <p class="about-version">Version 1.0</p>
+        <p>Turns Figma frames into tagged PDFs that screen readers can navigate, checked against PDF/UA-1. Everything happens inside Figma: nothing is uploaded.</p>
+        <p class="about-credit">Built by Chris Rushing with Claude while at <span class="nowrap">SpecterOps (<button id="about-site" class="link with-icon" type="button">specterops.io<span data-icon="external-link" data-size="12"></span></button>)</span></p>
+        <p class="about-credit">Icons from Lucide (ISC license, © Lucide contributors).</p>
+        <dl class="shortcuts">
+          <dt>⌘Z / Ctrl+Z</dt><dd>Undo the last decision</dd>
+          <dt class="with-icon">↑ ↓ on <span data-icon="grip-vertical" data-size="12"></span></dt><dd>Move a row in the reading order</dd>
+          <dt>Back / Next</dt><dd>Step through what needs review</dd>
+        </dl>
+      </div>
+      <div class="group about-tips">
+        <h2>For the best reading</h2>
+        <ul class="tips">
+          <li><span data-icon="check" data-size="12" data-class="tip-ic"></span><span><b>Auto layout for columns and stacks.</b> They're read in flow order.</span></li>
+          <li><span data-icon="check" data-size="12" data-class="tip-ic"></span><span><b>Keep things together.</b> Put a chart's title and source inside its frame, a caption with its photo.</span></li>
+          <li><span data-icon="check" data-size="12" data-class="tip-ic"></span><span><b>Text styles for headings.</b> Set a role once per style under Review → Options.</span></li>
+          <li><span data-icon="check" data-size="12" data-class="tip-ic"></span><span><b>Live text, not outlines.</b> Outlined words need alt text to be heard.</span></li>
+          <li><span data-icon="check" data-size="12" data-class="tip-ic"></span><span><b>Name images for what they show.</b> “Map of India” becomes the draft alt text.</span></li>
+          <li><span data-icon="check" data-size="12" data-class="tip-ic"></span><span><b>Hide what shouldn't be read.</b> Hidden layers and frames are left out.</span></li>
+        </ul>
+      </div>
+      <div class="group about-settings">
+        <h2>Settings</h2>
+        <label class="check"><input type="checkbox" id="auto-read" /> Read the page as soon as Screen Ready opens</label>
+        <span class="hint">Off: Screen Ready opens on a start screen, so you can tidy the page first.</span>
+        <button id="about-start" class="fix-btn" type="button">Show the start screen</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <nav class="review-nav" id="review-nav" aria-label="Review one by one" hidden>
+      <button id="review-prev" class="nav-btn" type="button" disabled><span data-icon="chevron-left" data-size="14"></span>Back</button>
+      <div class="review-pos" id="review-pos"></div>
+      <button id="review-next" class="nav-btn next" type="button"><span class="label">Next</span><span data-icon="chevron-right" data-size="14"></span></button>
+    </nav>
+    <button id="to-export" class="primary to-export" type="button" hidden><span class="label">Continue to export</span><span data-icon="arrow-right" data-size="14"></span></button>
+    <button id="export" class="primary" type="button" disabled><span class="fill" aria-hidden="true"></span><span data-icon="file-down" data-size="14" data-class="lead"></span><span class="label">Export PDF</span></button>
+    <div id="export-progress" class="sr-only" role="progressbar" aria-label="Export progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+    <div id="progress-live" class="sr-only" aria-live="polite"></div>
+    <div class="export-meta" id="export-meta"></div>
+  </footer>
+  <div id="announce" class="sr-only" aria-live="assertive"></div>
+  <!--SCRIPT-->
+</body>
+</html>
