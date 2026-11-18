@@ -110,8 +110,8 @@ export interface TagReport {
   warnings: string[];
   /** Vector drawing code before and after slimming, in bytes (not set when quality is Original). */
   vectors?: { before: number; after: number };
-  /** Single-drawing transparency groups removed so Apple renderers blend them right. */
-  groupsDropped?: number;
+  /** Clip masks turned into clipping paths and groups unwrapped, so Apple's renderer blends layers right. */
+  groups?: { masks: number; groups: number };
   /** What image compression did, one entry per image (empty when quality is Original). */
   images: Array<{ name: string; from: [number, number]; to: [number, number]; before: number; after: number; kept?: string }>;
 }
