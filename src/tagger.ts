@@ -28,6 +28,7 @@ import {
 import { fullText, type DocumentInput, type ImageItem, type ListItem, type TableItem, type TagResult, type TextItem, type TextRole } from './types.ts';
 import { compressImages, type ImageCodec, type QualityPreset } from './compress.ts';
 import { slimVectors } from './slim.ts';
+import { dropSingleDrawingGroups } from './groups.ts';
 import { overlap, scanPaints, scanPlacements } from './content.ts';
 import { baseLang, linkDescription } from './checks.ts';
 
@@ -964,6 +965,9 @@ export async function buildTaggedPdf(input: DocumentInput, options: BuildOptions
     // Vector drawing code: numbers rounded to what's visible, recompressed at the highest level.
     report.vectors = slimVectors(doc);
   }
+
+  // So Preview and other Apple apps blend layers (Overlay grain, Multiply shadows) like the canvas.
+  report.groupsDropped = dropSingleDrawingGroups(doc);
 
   await progress({ phase: 'save', done: 0, total: 1 });
   const pdf = await doc.save({ useObjectStreams: true });
